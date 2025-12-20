@@ -5,10 +5,24 @@ import 'package:discover_malaysia/providers/favorites_provider.dart';
 import 'package:discover_malaysia/providers/settings_provider.dart';
 import 'package:discover_malaysia/screens/auth/login_page.dart';
 import 'package:discover_malaysia/screens/main_navigation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+import 'firebase_options.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
+  
   runApp(const MainApp());
 }
 

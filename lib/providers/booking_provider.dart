@@ -1,19 +1,92 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
 import '../models/booking.dart';
 import '../models/destination.dart';
 import '../services/booking_repository.dart';
+import '../services/firebase_booking_repository.dart';
 import '../services/interfaces/booking_repository_interface.dart';
 
 /// ChangeNotifier wrapper for booking state
 /// Allows widgets to rebuild when bookings change
 class BookingProvider extends ChangeNotifier {
   final IBookingRepository _repository;
+  final FirebaseBookingRepository? _firebaseRepository;
   bool _isLoading = false;
   String? _error;
   Booking? _lastCreatedBooking;
 
+  // Cached bookings for Firebase mode (populated via streams)
+  List<Booking> _allBookings = [];
+  List<Booking> _upcomingBookings = [];
+  List<Booking> _pastBookings = [];
+  StreamSubscription<List<Booking>>? _allBookingsSubscription;
+  StreamSubscription<List<Booking>>? _upcomingSubscription;
+  StreamSubscription<List<Booking>>? _pastSubscription;
+  String? _currentUserId;
+
   BookingProvider({IBookingRepository? repository})
-      : _repository = repository ?? BookingRepository();
+      : _repository = repository ??
+            (AppConfig.useFirebase
+                ? FirebaseBookingRepository()
+                : BookingRepository()),
+        _firebaseRepository =
+            AppConfig.useFirebase ? FirebaseBookingRepository() : null;
+
+  /// Initialize streams for a specific user (call when user logs in)
+  void initForUser(String userId) {
+    final firebaseRepo = _firebaseRepository;
+    if (!AppConfig.useFirebase || firebaseRepo == null) return;
+    if (_currentUserId == userId) return; // Already initialized
+
+    // Cancel previous subscriptions
+    _allBookingsSubscription?.cancel();
+    _upcomingSubscription?.cancel();
+    _pastSubscription?.cancel();
+
+    _currentUserId = userId;
+
+    // Listen to all bookings
+    _allBookingsSubscription =
+        firebaseRepo.streamBookingsForUser(userId).listen((bookings) {
+      _allBookings = bookings;
+      notifyListeners();
+    });
+
+    // Listen to upcoming bookings
+    _upcomingSubscription =
+        firebaseRepo.streamUpcomingBookings(userId).listen((bookings) {
+      _upcomingBookings = bookings;
+      notifyListeners();
+    });
+
+    // Listen to past bookings
+    _pastSubscription =
+        firebaseRepo.streamPastBookings(userId).listen((bookings) {
+      _pastBookings = bookings;
+      notifyListeners();
+    });
+  }
+
+  /// Clear user data (call when user logs out)
+  void clearUser() {
+    _allBookingsSubscription?.cancel();
+    _upcomingSubscription?.cancel();
+    _pastSubscription?.cancel();
+    _allBookings = [];
+    _upcomingBookings = [];
+    _pastBookings = [];
+    _currentUserId = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _allBookingsSubscription?.cancel();
+    _upcomingSubscription?.cancel();
+    _pastSubscription?.cancel();
+    super.dispose();
+  }
 
   // ============ Getters ============
 
@@ -23,21 +96,33 @@ class BookingProvider extends ChangeNotifier {
 
   /// Get all bookings for a user
   List<Booking> getBookingsForUser(String userId) {
+    if (AppConfig.useFirebase) {
+      return _allBookings;
+    }
     return _repository.getBookingsForUser(userId);
   }
 
   /// Get upcoming bookings for a user
   List<Booking> getUpcomingBookings(String userId) {
+    if (AppConfig.useFirebase) {
+      return _upcomingBookings;
+    }
     return _repository.getUpcomingBookings(userId);
   }
 
   /// Get past bookings for a user
   List<Booking> getPastBookings(String userId) {
+    if (AppConfig.useFirebase) {
+      return _pastBookings;
+    }
     return _repository.getPastBookings(userId);
   }
 
   /// Get a booking by ID
   Booking? getById(String id) {
+    if (AppConfig.useFirebase) {
+      return _allBookings.where((b) => b.id == id).firstOrNull;
+    }
     return _repository.getById(id);
   }
 

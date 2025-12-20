@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../main_navigation.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -15,12 +16,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = AuthService();
   
-  bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -33,6 +31,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+    final errorMessage = authProvider.error;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Account'),
@@ -68,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 32),
                 
                 // Error message
-                if (_errorMessage != null) ...[
+                if (errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -82,7 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _errorMessage!,
+                            errorMessage,
                             style: const TextStyle(color: Colors.red),
                           ),
                         ),
@@ -204,7 +206,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 
                 // Register button
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _register,
+                  onPressed: isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
@@ -213,7 +215,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isLoading
+                  child: isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -264,32 +266,20 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    final authProvider = context.read<AuthProvider>();
+    authProvider.clearError();
 
-    final result = await _authService.register(
+    final success = await authProvider.register(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (result.isSuccess) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavigation()),
-        );
-      } else {
-        setState(() {
-          _errorMessage = result.errorMessage;
-        });
-      }
+    if (mounted && success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigation()),
+      );
     }
   }
 }

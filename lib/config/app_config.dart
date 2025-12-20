@@ -6,7 +6,9 @@ class AppConfig {
   AppConfig._();
 
   // ============ Environment ============
-  static const bool isDemoMode = true;
+  static const bool isDemoMode = false;
+  /// Set to true to use Firebase Auth & Firestore, false to use in-memory demo data
+  static const bool useFirebase = true;
   static const String appName = 'Discover Malaysia';
   static const String appVersion = '1.0.0';
 

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../services/firebase_auth_service.dart';
 import '../services/interfaces/auth_service_interface.dart';
 
 /// ChangeNotifier wrapper for authentication state
@@ -14,7 +16,8 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
 
   AuthProvider({IAuthService? authService})
-      : _authService = authService ?? AuthService() {
+      : _authService = authService ??
+            (AppConfig.useFirebase ? FirebaseAuthService() : AuthService()) {
     // Listen to auth state changes
     _authSubscription = _authService.authStateChanges.listen((user) {
       _user = user;

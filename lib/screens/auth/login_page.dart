@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../../config/app_config.dart';
+import '../../providers/auth_provider.dart';
 import '../main_navigation.dart';
 import 'register_page.dart';
 
@@ -14,11 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
   
-  bool _isLoading = false;
   bool _obscurePassword = true;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -29,6 +28,10 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
+    final errorMessage = authProvider.error;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -67,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 48),
                 
                 // Error message
-                if (_errorMessage != null) ...[
+                if (errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -81,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _errorMessage!,
+                            errorMessage,
                             style: const TextStyle(color: Colors.red),
                           ),
                         ),
@@ -148,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                 
                 // Login button
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
+                  onPressed: isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
@@ -157,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isLoading
+                  child: isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -202,32 +205,33 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 32),
                 
-                // Demo credentials hint
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
+                // Demo credentials hint (only show in demo mode)
+                if (!AppConfig.useFirebase)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Demo Credentials:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'User: ${AppConfig.demoUserEmail} / ${AppConfig.demoUserPassword}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                        ),
+                        Text(
+                          'Admin: ${AppConfig.demoAdminEmail} / ${AppConfig.demoAdminPassword}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Demo Credentials:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'User: john@example.com / password123',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      ),
-                      Text(
-                        'Admin: admin@discovermalaysia.com / admin123',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
@@ -241,31 +245,19 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    final authProvider = context.read<AuthProvider>();
+    authProvider.clearError();
 
-    final result = await _authService.login(
+    final success = await authProvider.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (result.isSuccess) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavigation()),
-        );
-      } else {
-        setState(() {
-          _errorMessage = result.errorMessage;
-        });
-      }
+    if (mounted && success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigation()),
+      );
     }
   }
 }
