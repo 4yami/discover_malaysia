@@ -1,39 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../models/destination.dart';
+import '../models/review.dart';
+import '../providers/auth_provider.dart';
+import '../providers/destination_provider.dart';
+import '../providers/favorites_provider.dart';
+import 'booking_form_page.dart';
 
 class SiteDetailsPage extends StatelessWidget {
-  final Map<String, dynamic> site;
+  final Destination destination;
 
-  const SiteDetailsPage({super.key, required this.site});
-
-  List<Map<String, dynamic>> get reviews => [
-    {
-      'username': 'Alice Wong',
-      'comment': 'Amazing experience! The history comes alive here.',
-      'rating': 5,
-      'timestamp': DateTime.now().subtract(Duration(hours: 3)),
-    },
-    {
-      'username': 'Bob Tan',
-      'comment': 'Worth the visit. Great exhibits and friendly staff.',
-      'rating': 4,
-      'timestamp': DateTime.now().subtract(Duration(days: 1)),
-    },
-    {
-      'username': 'Charlie Lim',
-      'comment': 'Perfect place for families. Kids loved it!',
-      'rating': 5,
-      'timestamp': DateTime.now().subtract(Duration(days: 2)),
-    },
-    {
-      'username': 'Diana Chen',
-      'comment': 'Beautiful architecture and informative displays.',
-      'rating': 4,
-      'timestamp': DateTime.now().subtract(Duration(hours: 5)),
-    },
-  ];
+  const SiteDetailsPage({super.key, required this.destination});
 
   @override
   Widget build(BuildContext context) {
+    final destinationProvider = context.watch<DestinationProvider>();
+    final favoritesProvider = context.watch<FavoritesProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final reviews = destinationProvider.getReviewsForDestination(destination.id);
+    
+    final userId = authProvider.user?.id;
+    final isFavorite = userId != null && favoritesProvider.isFavorite(userId, destination.id);
+    
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -44,10 +33,14 @@ class SiteDetailsPage extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(site['image'] ?? 'assets/images/placeholder.jpg'),
+                    image: AssetImage(
+                      destination.images.isNotEmpty
+                          ? destination.images.first
+                          : 'assets/images/placeholder.jpg',
+                    ),
                     fit: BoxFit.cover,
                   ),
-                  color: Colors.grey[300], // Fallback
+                  color: Colors.grey[300],
                 ),
               ),
             ),
@@ -55,7 +48,39 @@ class SiteDetailsPage extends StatelessWidget {
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            actions: const [],
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.white),
+                onPressed: () => _shareDestination(context),
+              ),
+              IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : Colors.white,
+                ),
+                onPressed: () {
+                  if (userId != null) {
+                    favoritesProvider.toggleFavorite(userId, destination.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isFavorite 
+                            ? 'Removed from favorites'
+                            : 'Added to favorites',
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please login to add favorites'),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
           ),
           SliverToBoxAdapter(
             child: Padding(
@@ -63,26 +88,30 @@ class SiteDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title and Price
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
-                          site['title'] ?? 'Site Title',
-                          style: TextStyle(
+                          destination.name,
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          site['price'] ?? 'FREE',
+                          destination.displayPrice,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -93,327 +122,254 @@ class SiteDetailsPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  
+                  // Short description
                   Text(
-                    site['description'] ?? 'Site description',
+                    destination.shortDescription,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
                     ),
                   ),
                   const SizedBox(height: 16),
+                  
+                  // Distance and Rating
                   Row(
                     children: [
                       Icon(Icons.location_on, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
-                        site['distance'] ?? 'Distance not available',
+                        destination.displayDistance,
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       const Spacer(),
-                      Icon(Icons.star, color: Colors.amber),
+                      const Icon(Icons.star, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(
-                        site['rating']?.toString() ?? 'N/A',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        destination.rating.toString(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      Text(' (1,234 reviews)', style: TextStyle(color: Colors.grey[600])),
+                      Text(
+                        ' (${destination.reviewCount} reviews)',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
+                  
+                  // About section
                   const Text(
                     'About this place',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _getDetailedDescription(site['title'] ?? ''),
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700], height: 1.5),
+                    destination.detailedDescription,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[700],
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 24),
+                  
+                  // Location & Hours
                   const Text(
                     'Location & Hours',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _getAddress(site['title'] ?? ''),
+                    destination.address,
                     style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
                   const SizedBox(height: 8),
+                  
+                  // Maps links
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          // TODO: Open Google Maps with the address
-                        },
-                        child: Text(
-                          'Open Google Maps',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline,
-                          ),
+                        onTap: () => _openMaps(destination.effectiveGoogleMapsUrl),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.map, size: 18, color: Colors.blue),
+                            SizedBox(width: 4),
+                            Text(
+                              'Open Google Maps',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 24),
                       GestureDetector(
-                        onTap: () {
-                          // TODO: Open Waze with the address
-                        },
-                        child: Text(
-                          'Open Waze',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue,
-                            decoration: TextDecoration.underline,
-                          ),
+                        onTap: () => _openMaps(destination.effectiveWazeUrl),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.navigation, size: 18, color: Colors.blue),
+                            SizedBox(width: 4),
+                            Text(
+                              'Open Waze',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
+                  
+                  // Opening hours
                   const Text(
                     'Hours',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(3),
-                    },
-                    children: _getOpeningHoursTable(site['title'] ?? ''),
-                  ),
+                  _buildOpeningHoursTable(),
                   const SizedBox(height: 24),
+                  
+                  // Ticket Prices
                   const Text(
                     'Ticket Prices',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  _buildPricingTable(site['title'] ?? ''),
+                  _buildPricingTable(),
                   const SizedBox(height: 24),
+                  
+                  // Reviews
                   const Text(
                     'Reviews',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  ...reviews.map((review) => _buildReviewWidget(review)),
+                  if (reviews.isEmpty)
+                    Text(
+                      'No reviews yet. Be the first to review!',
+                      style: TextStyle(color: Colors.grey[600]),
+                    )
+                  else
+                    ...reviews.map((review) => _buildReviewWidget(review)),
+                  
+                  // Space for bottom button
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
           ),
         ],
       ),
+      
+      // Book Now Button
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookingFormPage(destination: destination),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Book Now',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  String _getDetailedDescription(String title) {
-    switch (title) {
-      case 'National Museum':
-        return 'The National Museum is Malaysia\'s premier museum showcasing the country\'s rich history, culture, and heritage. Explore fascinating exhibits from prehistoric times to modern Malaysia, featuring traditional arts, cultural artifacts, and historical displays that tell the story of this diverse nation.';
-      case 'Petronas Towers':
-        return 'The Petronas Twin Towers are an iconic symbol of Kuala Lumpur and Malaysia\'s rapid modernization. Standing at 451.9 meters tall, they were the world\'s tallest buildings from 1998 to 2004. Visitors can enjoy panoramic views from the skybridge and observation deck.';
-      case 'Batu Caves':
-        return 'Batu Caves is a limestone hill that has been converted into a Hindu temple site. The site features a series of caves and cave temples, with the main temple featuring a 140-foot statue of Lord Murugan. It\'s a place of worship and pilgrimage for Hindus worldwide.';
-      case 'KL Bird Park':
-        return 'The KL Bird Park is the world\'s largest free-flight walk-in aviary, spanning 21 acres and housing over 3,000 birds from 200 species. Walk through the park and enjoy close encounters with exotic birds in a natural setting.';
-      default:
-        return 'This is a beautiful cultural site in Malaysia offering visitors a unique glimpse into the country\'s rich heritage and natural wonders. Perfect for tourists looking to explore Malaysia\'s diverse attractions.';
+  Future<void> _openMaps(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
-  String _getAddress(String title) {
-    switch (title) {
-      case 'National Museum':
-        return 'Jalan Damansara, 50480 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia';
-      case 'Petronas Towers':
-        return 'Kuala Lumpur City Centre, 50088 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia';
-      case 'Batu Caves':
-        return 'Gombak, 68100 Batu Caves, Selangor, Malaysia';
-      case 'KL Bird Park':
-        return 'Jalan Cenderawasih, Tasik Perdana, 50480 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia';
-      default:
-        return 'Address not available';
-    }
-  }
-
-  List<TableRow> _getOpeningHoursTable(String title) {
-    List<Map<String, String>> hours;
-
-    switch (title) {
-      case 'National Museum':
-        hours = [
-          {'day': 'Monday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Tuesday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Wednesday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Thursday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Friday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Saturday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Sunday', 'hours': '9:00 AM - 6:00 PM'},
-        ];
-        break;
-      case 'Petronas Towers':
-        hours = [
-          {'day': 'Monday', 'hours': '9:00 AM - 9:00 PM'},
-          {'day': 'Tuesday', 'hours': '9:00 AM - 9:00 PM'},
-          {'day': 'Wednesday', 'hours': '9:00 AM - 9:00 PM'},
-          {'day': 'Thursday', 'hours': '9:00 AM - 9:00 PM'},
-          {'day': 'Friday', 'hours': '9:00 AM - 9:00 PM'},
-          {'day': 'Saturday', 'hours': '9:00 AM - 9:00 PM'},
-          {'day': 'Sunday', 'hours': '9:00 AM - 9:00 PM'},
-        ];
-        break;
-      case 'Batu Caves':
-        hours = [
-          {'day': 'Monday', 'hours': '6:00 AM - 9:00 PM'},
-          {'day': 'Tuesday', 'hours': '6:00 AM - 9:00 PM'},
-          {'day': 'Wednesday', 'hours': '6:00 AM - 9:00 PM'},
-          {'day': 'Thursday', 'hours': '6:00 AM - 9:00 PM'},
-          {'day': 'Friday', 'hours': '6:00 AM - 9:00 PM'},
-          {'day': 'Saturday', 'hours': '6:00 AM - 9:00 PM'},
-          {'day': 'Sunday', 'hours': '6:00 AM - 9:00 PM'},
-        ];
-        break;
-      case 'KL Bird Park':
-        hours = [
-          {'day': 'Monday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Tuesday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Wednesday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Thursday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Friday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Saturday', 'hours': '9:00 AM - 6:00 PM'},
-          {'day': 'Sunday', 'hours': '9:00 AM - 6:00 PM'},
-        ];
-        break;
-      default:
-        return [
-          const TableRow(
-            children: [
-              Text('Hours not available', style: TextStyle(fontSize: 14)),
-              Text(''),
-            ],
-          ),
-        ];
-    }
-
-    // Get current day of the week
+  Widget _buildOpeningHoursTable() {
     final now = DateTime.now();
-    String currentDay = '';
-    switch (now.weekday) {
-      case DateTime.monday:
-        currentDay = 'Monday';
-        break;
-      case DateTime.tuesday:
-        currentDay = 'Tuesday';
-        break;
-      case DateTime.wednesday:
-        currentDay = 'Wednesday';
-        break;
-      case DateTime.thursday:
-        currentDay = 'Thursday';
-        break;
-      case DateTime.friday:
-        currentDay = 'Friday';
-        break;
-      case DateTime.saturday:
-        currentDay = 'Saturday';
-        break;
-      case DateTime.sunday:
-        currentDay = 'Sunday';
-        break;
-    }
+    final daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final currentDay = daysOfWeek[now.weekday - 1];
 
-    return hours.map((hour) {
-      final isToday = hour['day'] == currentDay;
-      return TableRow(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Text(
-              hour['day']!,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
-                color: isToday ? Colors.black : Colors.black87,
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2),
+        1: FlexColumnWidth(3),
+      },
+      children: destination.openingHours.map((dayHours) {
+        final isToday = dayHours.day == currentDay;
+        return TableRow(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Text(
+                dayHours.day,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
+                  color: isToday ? Colors.black : Colors.black87,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: Text(
-              hour['hours']!,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                color: isToday ? Colors.black : Colors.grey,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Text(
+                dayHours.isClosed ? 'Closed' : dayHours.hours,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                  color: isToday ? Colors.black : Colors.grey,
+                ),
               ),
             ),
-          ),
-        ],
-      );
-    }).toList();
+          ],
+        );
+      }).toList(),
+    );
   }
 
-  Widget _buildPricingTable(String title) {
-    Map<String, String> pricing;
-
-    switch (title) {
-      case 'National Museum':
-        pricing = {
-          'Adult': 'RM 5.00',
-          'Child': 'RM 2.00',
-          'Senior': 'RM 3.00',
-          'Student': 'RM 3.00',
-          'Foreigner Adult': 'RM 10.00',
-          'Foreigner Child': 'RM 5.00',
-        };
-        break;
-      case 'Petronas Towers':
-        pricing = {
-          'Adult': 'RM 80.00',
-          'Child': 'RM 40.00',
-          'Senior': 'RM 60.00',
-          'Student': 'RM 60.00',
-          'Foreigner Adult': 'RM 120.00',
-          'Foreigner Child': 'RM 60.00',
-        };
-        break;
-      case 'Batu Caves':
-        pricing = {
-          'Adult': 'FREE',
-          'Child': 'FREE',
-          'Senior': 'FREE',
-          'Student': 'FREE',
-          'Foreigner Adult': 'FREE',
-          'Foreigner Child': 'FREE',
-        };
-        break;
-      case 'KL Bird Park':
-        pricing = {
-          'Adult': 'RM 55.00',
-          'Child': 'RM 35.00',
-          'Senior': 'RM 40.00',
-          'Student': 'RM 40.00',
-          'Foreigner Adult': 'RM 75.00',
-          'Foreigner Child': 'RM 45.00',
-        };
-        break;
-      default:
-        pricing = {
-          'Adult': 'RM 5.00',
-          'Child': 'RM 2.00',
-          'Senior': 'RM 3.00',
-          'Student': 'RM 3.00',
-          'Foreigner': 'RM 10.00',
-        };
-    }
-
+  Widget _buildPricingTable() {
+    final prices = destination.ticketPrice.toMap();
+    
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(1),
         1: FlexColumnWidth(1),
       },
-      children: pricing.entries.map((entry) {
+      children: prices.entries.map((entry) {
         return TableRow(
           children: [
             Padding(
@@ -429,7 +385,7 @@ class SiteDetailsPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: Text(
-                entry.value,
+                entry.value == 0 ? 'FREE' : 'RM ${entry.value.toStringAsFixed(2)}',
                 textAlign: TextAlign.left,
                 style: const TextStyle(
                   fontSize: 16,
@@ -444,7 +400,7 @@ class SiteDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReviewWidget(Map<String, dynamic> review) {
+  Widget _buildReviewWidget(Review review) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
@@ -452,7 +408,10 @@ class SiteDetailsPage extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: Colors.blue,
-            child: Text(review['username'][0].toUpperCase()),
+            child: Text(
+              review.username[0].toUpperCase(),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -463,24 +422,27 @@ class SiteDetailsPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      review['username'],
+                      review.username,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      _formatTimeAgo(review['timestamp']),
+                      review.timeAgo,
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
                 ),
                 Row(
-                  children: List.generate(5, (index) => Icon(
-                    Icons.star,
-                    size: 14,
-                    color: index < review['rating'] ? Colors.amber : Colors.grey[300],
-                  )),
+                  children: List.generate(
+                    5,
+                    (index) => Icon(
+                      Icons.star,
+                      size: 14,
+                      color: index < review.rating ? Colors.amber : Colors.grey[300],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text(review['comment']),
+                Text(review.comment),
               ],
             ),
           ),
@@ -489,18 +451,132 @@ class SiteDetailsPage extends StatelessWidget {
     );
   }
 
-  String _formatTimeAgo(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
+  void _shareDestination(BuildContext context) {
+    final text = '''
+Check out ${destination.name}!
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays} days ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} hours ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} minutes ago';
-    } else {
-      return 'Just now';
-    }
+${destination.shortDescription}
+
+📍 ${destination.address}
+⭐ Rating: ${destination.rating}/5.0
+💰 ${destination.displayPrice}
+
+Discover more amazing places in Malaysia!
+''';
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Share this destination',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildShareOption(
+                    context,
+                    icon: Icons.copy,
+                    label: 'Copy',
+                    onTap: () {
+                      // Copy text to clipboard
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Details copied to clipboard'),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildShareOption(
+                    context,
+                    icon: Icons.map,
+                    label: 'Maps',
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final url = Uri.parse(
+                        'https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}',
+                      );
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                  _buildShareOption(
+                    context,
+                    icon: Icons.navigation,
+                    label: 'Waze',
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final url = Uri.parse(
+                        'https://waze.com/ul?ll=${destination.latitude},${destination.longitude}&navigate=yes',
+                      );
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  text.trim(),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShareOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    );
   }
 }

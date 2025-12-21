@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1019123253768",
+    "project_id": "discover-malaysia",
+    "storage_bucket": "discover-malaysia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1019123253768:android:a975d16e3cae74580907bd",
+        "android_client_info": {
+          "package_name": "com.example.discover_malaysia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIJnJv-WbUIngEvSvXd618Rk-d6ieT8TY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

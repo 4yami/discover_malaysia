@@ -1,11 +1,64 @@
-import 'package:discover_malaysia/screens/site_details_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/destination.dart';
+import '../providers/destination_provider.dart';
+import 'site_details_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final _searchController = TextEditingController();
+  
+  DestinationCategory? _selectedCategory;
+  String _searchQuery = '';
+
+  List<Destination> _getFilteredDestinations(DestinationProvider provider) {
+    var destinations = provider.allDestinations;
+    
+    // Filter by category
+    if (_selectedCategory != null) {
+      destinations = destinations
+          .where((d) => d.category == _selectedCategory)
+          .toList();
+    }
+    
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      destinations = provider.search(_searchQuery);
+      if (_selectedCategory != null) {
+        destinations = destinations
+            .where((d) => d.category == _selectedCategory)
+            .toList();
+      }
+    }
+    
+    return destinations;
+  }
+
+  List<Destination> _getFeaturedDestinations(DestinationProvider provider) => 
+      provider.getFeatured(limit: 1);
+
+  List<Destination> _getNearbyDestinations(DestinationProvider provider) =>
+      provider.getNearby(limit: 5);
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final destinationProvider = context.watch<DestinationProvider>();
+    final filteredDestinations = _getFilteredDestinations(destinationProvider);
+    final featuredDestinations = _getFeaturedDestinations(destinationProvider);
+    final nearbyDestinations = _getNearbyDestinations(destinationProvider);
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -25,14 +78,21 @@ class HomePage extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
+            children: [
+              // Search bar
+              Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
-                  decoration: InputDecoration(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: const InputDecoration(
                     hintText: 'Search Malaysia Wonders',
                     prefixIcon: Icon(Icons.search),
                     border: InputBorder.none,
@@ -44,137 +104,38 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Featured for you',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              
+              // Category chips
+              _buildCategoryChips(),
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  final site = {
-                    'title': 'National Museum',
-                    'description': 'Malaysia National Museum',
-                    'price': 'RM 5.00',
-                    'rating': 4.0,
-                    'distance': '12.5km',
-                    'image': 'assets/images/national_museum.jpg',
-                  };
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SiteDetailsPage(site: site),
-                    ),
-                  );
-                },
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                  children: [
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          topRight: Radius.circular(12),
-                        ),
-                        image: const DecorationImage(
-                          image: AssetImage(
-                            'assets/images/national_museum.jpg',
-                          ), // Placeholder image
-                          fit: BoxFit.cover,
-                        ),
-                        color: Colors.grey[300], // Fallback color
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'National Museum',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      'Malaysia National Museum',
-                                      style: TextStyle(fontSize: 14),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Text(
-                                'RM 5.00',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.location_on,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text(
-                                    '12.5km away',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    size: 16,
-                                    color: Colors.amber,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text(
-                                    '4.0',
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              
+              // Show filtered results if searching or category selected
+              if (_searchQuery.isNotEmpty || _selectedCategory != null) ...[
+                Text(
+                  _selectedCategory != null 
+                      ? _getCategoryTitle(_selectedCategory!)
+                      : 'Search Results',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-              ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Nearby Cultural Sites',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _buildNearbySites(context),
+                const SizedBox(height: 16),
+                _buildDestinationList(filteredDestinations),
+              ] else ...[
+                // Default view: Featured + Nearby
+                const Text(
+                  'Featured for you',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                if (featuredDestinations.isNotEmpty)
+                  _buildFeaturedCard(featuredDestinations.first),
+                const SizedBox(height: 24),
+                const Text(
+                  'Nearby Cultural Sites',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                _buildNearbySites(nearbyDestinations),
+              ],
             ],
           ),
         ),
@@ -182,162 +143,347 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildNearbySites(BuildContext context) {
-    final sites = [
-      {
-        'title': 'Petronas Towers',
-        'description': 'Iconic twin towers in Kuala Lumpur',
-        'price': 'RM5',
-        'rating': 4.5,
-        'distance': '3.2km',
-        'image': 'assets/images/petronas.jpg', // Placeholder
-      },
-      {
-        'title': 'Batu Caves',
-        'description': 'Ancient Hindu temple site',
-        'price': 'FREE',
-        'rating': 4.2,
-        'distance': '8.1km',
-        'image': 'assets/images/batu_caves.jpg', // Placeholder
-      },
-      {
-        'title': 'KL Bird Park',
-        'description': 'World\'s largest free-flight aviary',
-        'price': 'RM10',
-        'rating': 4.8,
-        'distance': '12.5km',
-        'image': 'assets/images/bird_park.jpg', // Placeholder
-      },
-    ];
+  Widget _buildCategoryChips() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildCategoryChip(null, 'All', Icons.apps),
+          const SizedBox(width: 8),
+          _buildCategoryChip(DestinationCategory.sites, 'Sites', Icons.location_city),
+          const SizedBox(width: 8),
+          _buildCategoryChip(DestinationCategory.events, 'Events', Icons.event),
+          const SizedBox(width: 8),
+          _buildCategoryChip(DestinationCategory.packages, 'Packages', Icons.card_giftcard),
+          const SizedBox(width: 8),
+          _buildCategoryChip(DestinationCategory.food, 'Food', Icons.restaurant),
+        ],
+      ),
+    );
+  }
 
-    return Column(
-      children: sites
-          .map(
-            (site) => GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SiteDetailsPage(site: site),
-                  ),
-                );
-              },
-              child: Card(
-              elevation: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+  Widget _buildCategoryChip(DestinationCategory? category, String label, IconData icon) {
+    final isSelected = _selectedCategory == category;
+    return FilterChip(
+      selected: isSelected,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isSelected ? Colors.white : Colors.grey[700],
+          ),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
+      ),
+      selectedColor: Colors.blue,
+      checkmarkColor: Colors.white,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.grey[700],
+      ),
+      onSelected: (selected) {
+        setState(() {
+          _selectedCategory = selected ? category : null;
+        });
+      },
+    );
+  }
+
+  String _getCategoryTitle(DestinationCategory category) {
+    switch (category) {
+      case DestinationCategory.sites:
+        return 'Cultural Sites';
+      case DestinationCategory.events:
+        return 'Events';
+      case DestinationCategory.packages:
+        return 'Packages';
+      case DestinationCategory.food:
+        return 'Food & Dining';
+    }
+  }
+
+  Widget _buildDestinationList(List<Destination> destinations) {
+    if (destinations.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            children: [
+              Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'No destinations found',
+                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
               ),
-              child: Stack(
+            ],
+          ),
+        ),
+      );
+    }
+    
+    return Column(
+      children: destinations.map((d) => _buildSiteCard(d)).toList(),
+    );
+  }
+
+  Widget _buildFeaturedCard(Destination destination) {
+    return GestureDetector(
+      onTap: () => _navigateToDetails(destination),
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+                image: DecorationImage(
+                  image: AssetImage(
+                    destination.images.isNotEmpty 
+                        ? destination.images.first 
+                        : 'assets/images/placeholder.jpg',
+                  ),
+                  fit: BoxFit.cover,
+                ),
+                color: Colors.grey[300],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(12),
-                            bottomLeft: Radius.circular(12),
-                          ),
-                          image: DecorationImage(
-                            image: AssetImage(site['image']! as String),
-                            fit: BoxFit.cover,
-                          ),
-                          color: Colors.grey[300], // Fallback
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              destination.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              destination.shortDescription,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
                         ),
                       ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                site['title']! as String,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                site['description']! as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on,
-                                    size: 14,
-                                    color: Colors.grey,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    site['distance']! as String,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          destination.displayPrice,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            destination.displayDistance,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            size: 16,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            destination.rating.toString(),
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        site['price']! as String,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: Row(
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNearbySites(List<Destination> destinations) {
+    return Column(
+      children: destinations.map((d) => _buildSiteCard(d)).toList(),
+    );
+  }
+
+  Widget _buildSiteCard(Destination destination) {
+    return GestureDetector(
+      onTap: () => _navigateToDetails(destination),
+      child: Card(
+        elevation: 4,
+        margin: const EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                    image: DecorationImage(
+                      image: AssetImage(
+                        destination.images.isNotEmpty 
+                            ? destination.images.first 
+                            : 'assets/images/placeholder.jpg',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                    color: Colors.grey[300],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.star, size: 14, color: Colors.amber),
-                        const SizedBox(width: 2),
                         Text(
-                          (site['rating']! as double).toString(),
+                          destination.name,
                           style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 12,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          destination.shortDescription,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              destination.displayDistance,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  destination.displayPrice,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Row(
+                children: [
+                  const Icon(Icons.star, size: 14, color: Colors.amber),
+                  const SizedBox(width: 2),
+                  Text(
+                    destination.rating.toString(),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
-            ),
-          )
-          .toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToDetails(Destination destination) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SiteDetailsPage(destination: destination),
+      ),
     );
   }
 }
