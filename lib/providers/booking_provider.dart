@@ -39,6 +39,8 @@ class BookingProvider extends ChangeNotifier {
     if (!AppConfig.useFirebase || firebaseRepo == null) return;
     if (_currentUserId == userId) return; // Already initialized
 
+    debugPrint('[BookingProvider] Initializing for userId: $userId');
+
     // Cancel previous subscriptions
     _allBookingsSubscription?.cancel();
     _upcomingSubscription?.cancel();
@@ -49,6 +51,10 @@ class BookingProvider extends ChangeNotifier {
     // Listen to all bookings
     _allBookingsSubscription =
         firebaseRepo.streamBookingsForUser(userId).listen((bookings) {
+      debugPrint('[BookingProvider] streamBookingsForUser received: ${bookings.length} bookings');
+      for (final b in bookings) {
+        debugPrint('  - bookingId: ${b.id}, userId: ${b.userId}, status: ${b.status}, visitDate: ${b.visitDate}');
+      }
       _allBookings = bookings;
       notifyListeners();
     });
@@ -56,6 +62,7 @@ class BookingProvider extends ChangeNotifier {
     // Listen to upcoming bookings
     _upcomingSubscription =
         firebaseRepo.streamUpcomingBookings(userId).listen((bookings) {
+      debugPrint('[BookingProvider] streamUpcomingBookings received: ${bookings.length} bookings');
       _upcomingBookings = bookings;
       notifyListeners();
     });
@@ -63,6 +70,7 @@ class BookingProvider extends ChangeNotifier {
     // Listen to past bookings
     _pastSubscription =
         firebaseRepo.streamPastBookings(userId).listen((bookings) {
+      debugPrint('[BookingProvider] streamPastBookings received: ${bookings.length} bookings');
       _pastBookings = bookings;
       notifyListeners();
     });

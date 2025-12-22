@@ -64,11 +64,12 @@ class FirebaseBookingRepository implements IBookingRepository {
     return _bookingsCollection
         .where('userId', isEqualTo: userId)
         .where('visitDate', isGreaterThan: Timestamp.fromDate(now))
-        .where('status', isNotEqualTo: 'cancelled')
         .orderBy('visitDate')
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => _fromFirestore(doc)).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => _fromFirestore(doc))
+            .where((b) => b.status != BookingStatus.cancelled)
+            .toList());
   }
 
   /// Stream of past bookings for a user
