@@ -2,6 +2,9 @@ import 'package:discover_malaysia/screens/home_page.dart';
 import 'package:discover_malaysia/screens/profile_page.dart';
 import 'package:discover_malaysia/screens/bookings_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/booking_provider.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -10,8 +13,23 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
+
+
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize user data when app starts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user != null) {
+        debugPrint('Initializing data for user: ${user.id}');
+        context.read<BookingProvider>().initForUser(user.id);
+      }
+    });
+  }
 
   static const List<Widget> _pages = <Widget>[
     HomePage(),

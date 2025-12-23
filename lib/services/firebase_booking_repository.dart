@@ -52,7 +52,7 @@ class FirebaseBookingRepository implements IBookingRepository {
   Stream<List<Booking>> streamBookingsForUser(String userId) {
     return _bookingsCollection
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
+        // .orderBy('createdAt', descending: true) // Temporarily removed to fix "Requires Index" error
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => _fromFirestore(doc)).toList());

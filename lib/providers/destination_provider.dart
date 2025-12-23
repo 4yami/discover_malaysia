@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/destination.dart';
 import '../models/review.dart';
 import '../services/destination_repository.dart';
+import '../services/firebase_destination_repository.dart';
 import '../services/interfaces/destination_repository_interface.dart';
 
 /// ChangeNotifier wrapper for destination state
@@ -14,7 +15,21 @@ class DestinationProvider extends ChangeNotifier {
   String _searchQuery = '';
 
   DestinationProvider({IDestinationRepository? repository})
-      : _repository = repository ?? DestinationRepository();
+      : _repository = repository ?? FirebaseDestinationRepository() {
+    _initializeRepository();
+  }
+
+  Future<void> _initializeRepository() async {
+    if (_repository is FirebaseDestinationRepository) {
+      _isLoading = true;
+      notifyListeners();
+      
+      await (_repository as FirebaseDestinationRepository).initialize();
+      
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   // ============ Getters ============
 
@@ -94,8 +109,33 @@ class DestinationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+
+
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  /// Seed the database with dummy data (One-time use)
+  Future<void> seedDatabase() async {
+    if (_repository is FirebaseDestinationRepository) {
+      try {
+        _isLoading = true;
+        notifyListeners();
+
+        // Get dummy data from the local repository
+        final dummyData = DestinationRepository().getAllDestinations();
+        
+        await (_repository as FirebaseDestinationRepository).seedData(dummyData);
+        
+        _isLoading = false;
+        notifyListeners();
+      } catch (e) {
+        _error = e.toString();
+        _isLoading = false;
+        notifyListeners();
+        rethrow;
+      }
+    }
   }
 }

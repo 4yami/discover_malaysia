@@ -3,6 +3,9 @@ import '../../models/destination.dart';
 import '../../services/destination_repository.dart';
 import '../../services/auth_service.dart';
 import 'admin_site_list_page.dart';
+import 'package:provider/provider.dart';
+import '../../providers/destination_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -12,12 +15,13 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
-  final _authService = AuthService();
-  final _destinationRepo = DestinationRepository();
-
+  // Removed direct service instantiation to use Providers instead
+  
   @override
   Widget build(BuildContext context) {
-    final user = _authService.currentUser;
+    // Watch AuthProvider for user state changes
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
 
     if (user == null || !user.isAdmin) {
       return Scaffold(
@@ -32,13 +36,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 'Access denied. Admin privileges required.',
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
+              const SizedBox(height: 16),
+              // Helpful debug info for development
+              if (user != null)
+                 Text('Current role: ${user.role}', style: const TextStyle(color: Colors.red)),
             ],
           ),
         ),
       );
     }
 
-    final destinations = _destinationRepo.getAllDestinations();
+    // Watch DestinationProvider for data
+    final destinationProvider = context.watch<DestinationProvider>();
+    final destinations = destinationProvider.allDestinations;
     final recentUpdates = List<Destination>.from(destinations)
       ..sort((a, b) =>
           (b.lastUpdatedAt ?? DateTime(2000)).compareTo(a.lastUpdatedAt ?? DateTime(2000)));
@@ -122,6 +132,64 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             const Text(
               'Quick Actions',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    icon: Icons.cloud_upload,
+                    title: 'Seed DB',
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Seed Database?'),
+                          content: const Text(
+                              'This will overwrite basic data in Firestore with local dummy data. Continue?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Seed'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true && context.mounted) {
+                        try {
+                          await context
+                              .read<DestinationProvider>()
+                              .seedDatabase();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Database seeded successfully!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error seeding: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
             ),
             const SizedBox(height: 12),
             Row(

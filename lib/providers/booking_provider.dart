@@ -48,30 +48,33 @@ class BookingProvider extends ChangeNotifier {
 
     _currentUserId = userId;
 
-    // Listen to all bookings
+    // Listen to all bookings (Single Source of Truth)
+    // We filter upcoming/past client-side to avoid complex Firestore indexes
     _allBookingsSubscription =
         firebaseRepo.streamBookingsForUser(userId).listen((bookings) {
-      debugPrint('[BookingProvider] streamBookingsForUser received: ${bookings.length} bookings');
-      for (final b in bookings) {
-        debugPrint('  - bookingId: ${b.id}, userId: ${b.userId}, status: ${b.status}, visitDate: ${b.visitDate}');
-      }
+      debugPrint(
+          '[BookingProvider] streamBookingsForUser received: ${bookings.length} bookings');
+      
       _allBookings = bookings;
-      notifyListeners();
-    });
+      
+      final now = DateTime.now();
+      _upcomingBookings = bookings.where((b) {
+        return b.visitDate.isAfter(now) && b.status != BookingStatus.cancelled;
+      }).toList()
+        ..sort((a, b) => a.visitDate.compareTo(b.visitDate));
 
-    // Listen to upcoming bookings
-    _upcomingSubscription =
-        firebaseRepo.streamUpcomingBookings(userId).listen((bookings) {
-      debugPrint('[BookingProvider] streamUpcomingBookings received: ${bookings.length} bookings');
-      _upcomingBookings = bookings;
-      notifyListeners();
-    });
+      _pastBookings = bookings.where((b) {
+        // Past includes completed, cancelled, or dates in past
+        if (b.status == BookingStatus.cancelled) return false; // Usually past doesn't show cancelled? 
+        // Wait, original logic for past: visitDate < now
+        return b.visitDate.isBefore(now);
+      }).toList()
+        ..sort((a, b) => b.visitDate.compareTo(a.visitDate));
 
-    // Listen to past bookings
-    _pastSubscription =
-        firebaseRepo.streamPastBookings(userId).listen((bookings) {
-      debugPrint('[BookingProvider] streamPastBookings received: ${bookings.length} bookings');
-      _pastBookings = bookings;
+      notifyListeners();
+    }, onError: (e) {
+      debugPrint('[BookingProvider] Error in stream: $e');
+      _error = 'Failed to load bookings: $e';
       notifyListeners();
     });
   }
