@@ -101,10 +101,91 @@ class FirebaseDestinationRepository implements IDestinationRepository {
   }
 
   /// Get reviews for a destination (Dummy implementation for now as Reviews aren't in Firestore yet)
+  /// Get reviews for a destination from Firestore subcollection
   @override
   List<Review> getReviewsForDestination(String destinationId) {
-    // TODO: Implement reviews in Firestore
+    // Note: Ideally this should return Stream<List<Review>> or Future<List<Review>>
+    // Since the interface is synchronous, we cannot implement this correctly without
+    // changing the interface or using a separate method.
+    // However, users usually want to see reviews "live".
+    // 
+    // TEMPORARY SOLUTION:
+    // We will return an empty list here because the Provider needs to switch to a
+    // Stream-based approach for reviews, similar to Bookings.
+    // 
+    // The actual fetching will be done via a NEW method `streamReviews` that the Provider will call.
     return []; 
+  }
+
+  /// Stream reviews for a destination
+  Stream<List<Review>> streamReviews(String destinationId) {
+    return _firestore
+        .collection(_collection)
+        .doc(destinationId)
+        .collection('reviews')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Review.fromMap(doc.data(), id: doc.id))
+            .toList());
+  }
+
+  /// Add a review to a destination
+  Future<void> addReview(Review review) async {
+    try {
+      // 1. Add review to subcollection
+      final docRef = _firestore
+          .collection(_collection)
+          .doc(review.destinationId)
+          .collection('reviews')
+          .doc();
+          
+      // Create review with new ID
+      final newReview = Review(
+        id: docRef.id,
+        destinationId: review.destinationId,
+        userId: review.userId,
+        username: review.username,
+        comment: review.comment,
+        rating: review.rating,
+        timestamp: DateTime.now(),
+      );
+
+      await docRef.set(newReview.toMap());
+
+      // 2. Update destination average rating
+      // We can do this via a Cloud Function ideally, but for now client-side
+      await _updateDestinationRating(review.destinationId);
+
+    } catch (e) {
+      debugPrint('Error adding review: $e');
+      rethrow;
+    }
+  }
+
+  /// Helper to recalculate usage
+  Future<void> _updateDestinationRating(String destinationId) async {
+      final reviewsQuery = await _firestore
+          .collection(_collection)
+          .doc(destinationId)
+          .collection('reviews')
+          .get();
+      
+      final reviews = reviewsQuery.docs;
+      if (reviews.isEmpty) return;
+
+      double totalRating = 0;
+      for (var doc in reviews) {
+        totalRating += (doc.data()['rating'] ?? 0) as num;
+      }
+      
+      final averageRating = totalRating / reviews.length;
+      final roundedRating = double.parse(averageRating.toStringAsFixed(1));
+
+      await _firestore.collection(_collection).doc(destinationId).update({
+        'rating': roundedRating,
+        'reviewCount': reviews.length,
+      });
   }
 
   // ============ ADMIN METHODS ============
