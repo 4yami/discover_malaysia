@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/booking_provider.dart';
+import '../providers/favorites_provider.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -27,6 +28,7 @@ class _MainNavigationState extends State<MainNavigation> {
       if (user != null) {
         debugPrint('Initializing data for user: ${user.id}');
         context.read<BookingProvider>().initForUser(user.id);
+        context.read<FavoritesProvider>().initForUser(user.id);
       }
     });
   }
