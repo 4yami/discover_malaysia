@@ -1,5 +1,4 @@
 import 'package:discover_malaysia/screens/home_page.dart';
-import 'package:discover_malaysia/screens/map_page.dart';
 import 'package:discover_malaysia/screens/profile_page.dart';
 import 'package:discover_malaysia/screens/bookings_page.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +35,6 @@ class _MainNavigationState extends State<MainNavigation> {
 
   static const List<Widget> _pages = <Widget>[
     HomePage(),
-    MapPage(),
     BookingsPage(),
     ProfilePage(),
   ];
@@ -60,10 +58,6 @@ class _MainNavigationState extends State<MainNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book_online),

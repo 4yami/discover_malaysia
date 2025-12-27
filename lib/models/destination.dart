@@ -141,7 +141,7 @@ class Destination {
     if (googleMapsUrl != null && googleMapsUrl!.isNotEmpty) {
       return googleMapsUrl!;
     }
-    return 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    return 'geo:$latitude,$longitude';
   }
 
   /// Generate Waze URL from coordinates if not provided

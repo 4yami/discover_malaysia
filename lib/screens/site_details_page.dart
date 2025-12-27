@@ -194,7 +194,7 @@ class SiteDetailsPage extends StatelessWidget {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => _openMaps(destination.effectiveGoogleMapsUrl),
+                        onTap: () => _openMaps(context, destination.effectiveGoogleMapsUrl),
                         child: const Row(
                           children: [
                             Icon(Icons.map, size: 18, color: Colors.blue),
@@ -212,7 +212,7 @@ class SiteDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 24),
                       GestureDetector(
-                        onTap: () => _openMaps(destination.effectiveWazeUrl),
+                        onTap: () => _openMaps(context, destination.effectiveWazeUrl),
                         child: const Row(
                           children: [
                             Icon(Icons.navigation, size: 18, color: Colors.blue),
@@ -340,10 +340,16 @@ class SiteDetailsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _openMaps(String url) async {
+  Future<void> _openMaps(BuildContext context, String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      await launchUrl(uri);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error opening link: $e')),
+        );
+      }
     }
   }
 
@@ -529,28 +535,21 @@ Discover more amazing places in Malaysia!
                     context,
                     icon: Icons.map,
                     label: 'Maps',
-                    onTap: () async {
+                    onTap: () {
                       Navigator.pop(context);
-                      final url = Uri.parse(
-                        'https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}',
-                      );
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
+                      _openMaps(context, destination.effectiveGoogleMapsUrl);
                     },
                   ),
                   _buildShareOption(
                     context,
                     icon: Icons.navigation,
                     label: 'Waze',
-                    onTap: () async {
+                    onTap: () {
                       Navigator.pop(context);
-                      final url = Uri.parse(
+                      _openMaps(
+                        context,
                         'https://waze.com/ul?ll=${destination.latitude},${destination.longitude}&navigate=yes',
                       );
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
                     },
                   ),
                 ],
@@ -648,14 +647,10 @@ Discover more amazing places in Malaysia!
           ),
           IconButton(
             icon: const Icon(Icons.directions, color: Colors.blue),
-            onPressed: () async {
-               final url = Uri.parse(
-                'https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}',
-              );
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              }
-            },
+            onPressed: () => _openMaps(
+              context,
+              'https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}',
+            ),
           ),
         ],
       ),
