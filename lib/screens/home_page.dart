@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/destination.dart';
 import '../providers/destination_provider.dart';
+import '../providers/location_provider.dart';
 import 'site_details_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -55,7 +56,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final locationProvider = context.watch<LocationProvider>();
     final destinationProvider = context.watch<DestinationProvider>();
+
+    // Update destination provider with current location
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      destinationProvider.setUserLocation(locationProvider.currentPosition);
+    });
+
     final filteredDestinations = _getFilteredDestinations(destinationProvider);
     final featuredDestinations = _getFeaturedDestinations(destinationProvider);
     final nearbyDestinations = _getNearbyDestinations(destinationProvider);

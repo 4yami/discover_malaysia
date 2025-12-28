@@ -38,7 +38,9 @@ class SettingsPage extends StatelessWidget {
             title: const Text('Location Services'),
             subtitle: const Text('Allow app to access your location'),
             value: settings.locationEnabled,
-            onChanged: settings.setLocationEnabled,
+            onChanged: (value) async {
+              await settings.setLocationEnabled(value);
+            },
           ),
           SwitchListTile(
             secondary: const Icon(Icons.analytics_outlined),

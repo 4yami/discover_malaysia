@@ -1,22 +1,81 @@
 import 'package:flutter/foundation.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/destination.dart';
 import '../models/review.dart';
 import '../services/destination_repository.dart';
 import '../services/firebase_destination_repository.dart';
 import '../services/interfaces/destination_repository_interface.dart';
+import '../services/location_service.dart';
 
 /// ChangeNotifier wrapper for destination state
 /// Allows widgets to rebuild when destinations change
 class DestinationProvider extends ChangeNotifier {
   final IDestinationRepository _repository;
+  final LocationService _locationService = LocationService();
   // ignore: prefer_final_fields
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
+  LatLng? _currentUserLocation;
 
-  DestinationProvider({IDestinationRepository? repository})
-      : _repository = repository ?? FirebaseDestinationRepository() {
+  DestinationProvider({
+    IDestinationRepository? repository,
+    LatLng? initialUserLocation,
+  }) : _repository = repository ?? FirebaseDestinationRepository(),
+       _currentUserLocation = initialUserLocation {
     _initializeRepository();
+  }
+
+  /// Set current user location
+  void setUserLocation(LatLng? location) {
+    if (_currentUserLocation != location) {
+      _currentUserLocation = location;
+      notifyListeners(); // Notify to recalculate distances
+    }
+  }
+
+  /// Get current user location
+  LatLng? get currentUserLocation => _currentUserLocation;
+
+  /// Helper method to create destination with calculated distance
+  Destination _destinationWithDistance(Destination destination, LatLng? userLocation) {
+    if (userLocation == null) {
+      return destination; // Return as-is if no user location
+    }
+
+    final distanceKm = _locationService.calculateDistance(
+      userLocation,
+      LatLng(destination.latitude, destination.longitude),
+    );
+
+    // Create new destination with calculated distance
+    return Destination(
+      id: destination.id,
+      name: destination.name,
+      shortDescription: destination.shortDescription,
+      detailedDescription: destination.detailedDescription,
+      category: destination.category,
+      address: destination.address,
+      latitude: destination.latitude,
+      longitude: destination.longitude,
+      images: destination.images,
+      openingHours: destination.openingHours,
+      ticketPrice: destination.ticketPrice,
+      rating: destination.rating,
+      reviewCount: destination.reviewCount,
+      distanceKm: distanceKm,
+      lastUpdatedAt: destination.lastUpdatedAt,
+      updatedByAdminId: destination.updatedByAdminId,
+    );
+  }
+
+  /// Helper method to get destinations with distances calculated
+  List<Destination> _destinationsWithDistances(List<Destination> destinations, LatLng? userLocation) {
+    if (userLocation == null) {
+      return destinations; // Return as-is if no user location
+    }
+
+    return destinations.map((dest) => _destinationWithDistance(dest, userLocation)).toList();
   }
 
   Future<void> _initializeRepository() async {
@@ -42,9 +101,9 @@ class DestinationProvider extends ChangeNotifier {
     final destinations = _repository.getAllDestinations();
     // If Firebase cache is empty, fall back to dummy data for development
     if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
-      return DestinationRepository().getAllDestinations();
+      return _destinationsWithDistances(DestinationRepository().getAllDestinations(), currentUserLocation);
     }
-    return destinations;
+    return _destinationsWithDistances(destinations, currentUserLocation);
   }
 
   /// Get destinations by category
@@ -52,9 +111,9 @@ class DestinationProvider extends ChangeNotifier {
     final destinations = _repository.getByCategory(category);
     // If Firebase returns empty, fall back to dummy data
     if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
-      return DestinationRepository().getByCategory(category);
+      return _destinationsWithDistances(DestinationRepository().getByCategory(category), currentUserLocation);
     }
-    return destinations;
+    return _destinationsWithDistances(destinations, currentUserLocation);
   }
 
   /// Get featured destinations (top rated)
@@ -62,19 +121,17 @@ class DestinationProvider extends ChangeNotifier {
     final destinations = _repository.getFeatured(limit: limit);
     // If Firebase returns empty, fall back to dummy data
     if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
-      return DestinationRepository().getFeatured(limit: limit);
+      return _destinationsWithDistances(DestinationRepository().getFeatured(limit: limit), currentUserLocation);
     }
-    return destinations;
+    return _destinationsWithDistances(destinations, currentUserLocation);
   }
 
   /// Get nearby destinations (sorted by distance)
   List<Destination> getNearby({int limit = 5}) {
-    final destinations = _repository.getNearby(limit: limit);
-    // If Firebase returns empty, fall back to dummy data
-    if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
-      return DestinationRepository().getNearby(limit: limit);
-    }
-    return destinations;
+    // Get all destinations and sort by distance
+    final allDests = allDestinations.where((d) => d.distanceKm != null).toList()
+      ..sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!));
+    return allDests.take(limit).toList();
   }
 
   /// Search destinations by name or description
@@ -83,9 +140,9 @@ class DestinationProvider extends ChangeNotifier {
     final destinations = _repository.search(query);
     // If Firebase returns empty and query is not empty, fall back to dummy data
     if (destinations.isEmpty && query.isNotEmpty && _repository is FirebaseDestinationRepository) {
-      return DestinationRepository().search(query);
+      return _destinationsWithDistances(DestinationRepository().search(query), currentUserLocation);
     }
-    return destinations;
+    return _destinationsWithDistances(destinations, currentUserLocation);
   }
 
   /// Get current search results
@@ -96,7 +153,11 @@ class DestinationProvider extends ChangeNotifier {
 
   /// Get a destination by ID
   Destination? getById(String id) {
-    return _repository.getById(id);
+    final destination = _repository.getById(id);
+    if (destination != null) {
+      return _destinationWithDistance(destination, currentUserLocation);
+    }
+    return null;
   }
 
   // Cache for reviews

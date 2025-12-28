@@ -44,7 +44,7 @@ class DestinationCard extends StatelessWidget {
               child: Container(
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: destination.images.isNotEmpty
-                    ? Image.asset(
+                    ? Image.network(
                         destination.images.first,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _buildPlaceholder(theme),
@@ -159,7 +159,7 @@ class DestinationCard extends StatelessWidget {
                 child: Container(
                   color: theme.colorScheme.surfaceContainerHighest,
                   child: destination.images.isNotEmpty
-                      ? Image.asset(
+                      ? Image.network(
                           destination.images.first,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _buildPlaceholder(theme),

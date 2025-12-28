@@ -238,7 +238,7 @@ class _AdminEditSitePageState extends State<AdminEditSitePage> {
               TextFormField(
                 controller: _imageUrlController,
                 decoration: const InputDecoration(
-                  labelText: 'Image Path (e.g., assets/images/site.jpg)',
+                  labelText: 'Image Path (e.g., https://firebasestorage.com/assets/images/site.jpg)',
                   border: OutlineInputBorder(),
                 ),
               ),

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/booking_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/location_provider.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -29,8 +30,43 @@ class _MainNavigationState extends State<MainNavigation> {
         debugPrint('Initializing data for user: ${user.id}');
         context.read<BookingProvider>().initForUser(user.id);
         context.read<FavoritesProvider>().initForUser(user.id);
+
+        // Request location permission after user logs in
+        _requestLocationPermission();
       }
     });
+  }
+
+  Future<void> _requestLocationPermission() async {
+    final locationProvider = context.read<LocationProvider>();
+
+    // Show dialog asking for location permission
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Enable Location Services'),
+          content: const Text(
+            'To show distances to nearby sites and provide a better experience, '
+            'please enable location services.'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Not Now'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                // Request location permission and get location
+                await locationProvider.requestPermission();
+              },
+              child: const Text('Enable'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   static const List<Widget> _pages = <Widget>[

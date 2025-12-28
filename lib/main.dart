@@ -2,6 +2,7 @@ import 'package:discover_malaysia/providers/auth_provider.dart';
 import 'package:discover_malaysia/providers/booking_provider.dart';
 import 'package:discover_malaysia/providers/destination_provider.dart';
 import 'package:discover_malaysia/providers/favorites_provider.dart';
+import 'package:discover_malaysia/providers/location_provider.dart';
 import 'package:discover_malaysia/providers/settings_provider.dart';
 import 'package:discover_malaysia/providers/transit_provider.dart';
 import 'package:discover_malaysia/screens/auth/login_page.dart';
@@ -38,6 +39,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => DestinationProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(
           create: (_) => TransitProvider()..loadStations(),
