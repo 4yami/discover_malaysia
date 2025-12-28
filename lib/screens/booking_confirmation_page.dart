@@ -6,15 +6,12 @@ import '../config/app_config.dart';
 class BookingConfirmationPage extends StatelessWidget {
   final Booking booking;
 
-  const BookingConfirmationPage({
-    super.key,
-    required this.booking,
-  });
+  const BookingConfirmationPage({super.key, required this.booking});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -37,7 +34,7 @@ class BookingConfirmationPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Success message
               Text(
                 'Booking Confirmed!',
@@ -55,7 +52,7 @@ class BookingConfirmationPage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              
+
               // Booking details card
               Card(
                 elevation: 2,
@@ -93,7 +90,7 @@ class BookingConfirmationPage extends StatelessWidget {
                         ),
                       ),
                       const Divider(height: 24),
-                      
+
                       // Destination
                       _buildDetailRow(
                         context,
@@ -102,7 +99,7 @@ class BookingConfirmationPage extends StatelessWidget {
                         value: booking.destinationName,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Visit date
                       _buildDetailRow(
                         context,
@@ -111,16 +108,17 @@ class BookingConfirmationPage extends StatelessWidget {
                         value: booking.formattedVisitDate,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Tickets
                       _buildDetailRow(
                         context,
                         icon: Icons.people,
                         label: 'Tickets',
-                        value: '${booking.totalTickets} ${booking.totalTickets == 1 ? 'ticket' : 'tickets'}',
+                        value:
+                            '${booking.totalTickets} ${booking.totalTickets == 1 ? 'ticket' : 'tickets'}',
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Visitors
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,21 +140,31 @@ class BookingConfirmationPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                ...booking.visitorNames.map((name) => Text(
-                                  name,
-                                  style: theme.textTheme.bodyMedium,
-                                )),
+                                ...booking.visitorNames.map(
+                                  (name) => Text(
+                                    name,
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                         ],
                       ),
                       const Divider(height: 24),
-                      
+
                       // Price breakdown
-                      _buildPriceRow(context, 'Subtotal', AppConfig.formatPrice(booking.subtotal)),
+                      _buildPriceRow(
+                        context,
+                        'Subtotal',
+                        AppConfig.formatPrice(booking.subtotal),
+                      ),
                       const SizedBox(height: 8),
-                      _buildPriceRow(context, 'Tax (6% SST)', AppConfig.formatPrice(booking.taxAmount)),
+                      _buildPriceRow(
+                        context,
+                        'Tax (6% SST)',
+                        AppConfig.formatPrice(booking.taxAmount),
+                      ),
                       const Divider(height: 16),
                       _buildPriceRow(
                         context,
@@ -191,7 +199,7 @@ class BookingConfirmationPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // Action buttons
               SizedBox(
                 width: double.infinity,
@@ -217,9 +225,7 @@ class BookingConfirmationPage extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    // Navigate to bookings page
                     Navigator.of(context).popUntil((route) => route.isFirst);
-                    // TODO: Navigate to bookings tab
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -275,7 +281,12 @@ class BookingConfirmationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceRow(BuildContext context, String label, String value, {bool isTotal = false}) {
+  Widget _buildPriceRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool isTotal = false,
+  }) {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -283,7 +294,9 @@ class BookingConfirmationPage extends StatelessWidget {
         Text(
           label,
           style: isTotal
-              ? theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
+              ? theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                )
               : theme.textTheme.bodyMedium,
         ),
         Text(

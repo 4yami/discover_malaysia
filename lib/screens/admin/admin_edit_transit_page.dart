@@ -14,12 +14,12 @@ class AdminEditTransitPage extends StatefulWidget {
 
 class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _lineInfoController;
   late TextEditingController _latController;
   late TextEditingController _lngController;
-  
+
   String _selectedType = 'lrt';
   bool _isLoading = false;
 
@@ -33,7 +33,7 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
     _lineInfoController = TextEditingController(text: s?.lineInfo ?? '');
     _latController = TextEditingController(text: s?.latitude.toString() ?? '');
     _lngController = TextEditingController(text: s?.longitude.toString() ?? '');
-    
+
     if (s != null) {
       _selectedType = s.type;
     }
@@ -51,9 +51,7 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Station' : 'Add Station'),
-      ),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Station' : 'Add Station')),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -72,16 +70,18 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Type *',
                   border: OutlineInputBorder(),
                 ),
                 items: ['lrt', 'mrt', 'monorail', 'ktm', 'hub', 'bus']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type.toUpperCase()),
-                        ))
+                    .map(
+                      (type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(type.toUpperCase()),
+                      ),
+                    )
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedType = val);
@@ -99,8 +99,10 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
               ),
               const SizedBox(height: 24),
 
-              const Text('Location',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                'Location',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
 
               Row(
@@ -112,7 +114,9 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
                         labelText: 'Latitude *',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (v) {
                         if (v?.isEmpty == true) return 'Required';
                         if (double.tryParse(v!) == null) return 'Invalid';
@@ -128,7 +132,9 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
                         labelText: 'Longitude *',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (v) {
                         if (v?.isEmpty == true) return 'Required';
                         if (double.tryParse(v!) == null) return 'Invalid';
@@ -154,7 +160,8 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : Text(_isEditing ? 'Save Changes' : 'Add Station'),
                 ),
               ),
@@ -172,14 +179,16 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
 
     try {
       final station = TransitStation(
-        id: widget.station?.id ?? '', // Correctly passing empty ID for new items (repo handles if needed, or we might need to verify provider behavior)
-        // Wait, provider update uses doc(id), so new item needs ID? 
+        id:
+            widget.station?.id ??
+            '', // Correctly passing empty ID for new items (repo handles if needed, or we might need to verify provider behavior)
+
+        // Wait, provider update uses doc(id), so new item needs ID?
         // Firestore add() generates ID. update() needs existing ID.
         // So for new station, ID can be empty string if we use add().
         // My Logic:
         // if editing -> updateStation(station) -> uses station.id
         // if new -> addStation(station) -> ignores station.id, generates new.
-        
         name: _nameController.text.trim(),
         type: _selectedType,
         lineInfo: _lineInfoController.text.trim(),
@@ -188,7 +197,7 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
       );
 
       final provider = context.read<TransitProvider>();
-      
+
       if (_isEditing) {
         await provider.updateStation(station);
       } else {
@@ -197,7 +206,10 @@ class _AdminEditTransitPageState extends State<AdminEditTransitPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Saved successfully'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Saved successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }

@@ -14,7 +14,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -23,7 +23,7 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
-  
+
   runApp(const MainApp());
 }
 
@@ -39,7 +39,9 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DestinationProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => TransitProvider()..loadStations()),
+        ChangeNotifierProvider(
+          create: (_) => TransitProvider()..loadStations(),
+        ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {

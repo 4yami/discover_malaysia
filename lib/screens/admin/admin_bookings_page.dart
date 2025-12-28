@@ -70,7 +70,11 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Icon(Icons.calendar_today_outlined, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No bookings found',
@@ -158,7 +162,7 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
                       const SizedBox(height: 4),
                       Text(
                         'Visit: ${DateFormat('MMM d, yyyy').format(booking.visitDate)}',
-                         style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ],
                   ),
@@ -183,18 +187,22 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
                 ),
               ],
             ),
-            
+
             // Optional: Add Cancel Button if pending/confirmed?
-            if (booking.status == BookingStatus.confirmed || booking.status == BookingStatus.pending) ...[
-               const Divider(height: 24),
-               Align(
-                 alignment: Alignment.centerRight,
-                 child: TextButton.icon(
-                   onPressed: () => _confirmCancel(booking),
-                   icon: const Icon(Icons.cancel, color: Colors.red, size: 18),
-                   label: const Text('Cancel Booking', style: TextStyle(color: Colors.red)),
-                 ),
-               ),
+            if (booking.status == BookingStatus.confirmed ||
+                booking.status == BookingStatus.pending) ...[
+              const Divider(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => _confirmCancel(booking),
+                  icon: const Icon(Icons.cancel, color: Colors.red, size: 18),
+                  label: const Text(
+                    'Cancel Booking',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
             ],
           ],
         ),
@@ -228,9 +236,9 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 26),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 128)),
       ),
       child: Text(
         label,
@@ -243,14 +251,12 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
     );
   }
 
-   Future<void> _confirmCancel(Booking booking) async {
+  Future<void> _confirmCancel(Booking booking) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Booking'),
-        content: Text(
-          'Are you sure you want to cancel booking ${booking.id}?',
-        ),
+        content: Text('Are you sure you want to cancel booking ${booking.id}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -258,7 +264,10 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Yes, Cancel',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -268,7 +277,7 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
       try {
         await context.read<BookingProvider>().cancelBooking(booking.id);
         _refreshBookings(); // Reload list
-         if (mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Booking cancelled successfully')),
           );
