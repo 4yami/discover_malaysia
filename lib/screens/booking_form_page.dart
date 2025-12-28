@@ -198,11 +198,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 image: DecorationImage(
-                  image: AssetImage(
-                    widget.destination.images.isNotEmpty
-                        ? widget.destination.images.first
-                        : 'assets/images/placeholder.jpg',
-                  ),
+                  image: widget.destination.images.isNotEmpty
+                      ? NetworkImage(widget.destination.images.first)
+                      : AssetImage('assets/images/placeholder.jpg'),
                   fit: BoxFit.cover,
                 ),
                 color: Colors.grey[300],

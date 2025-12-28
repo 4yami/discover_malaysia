@@ -134,11 +134,9 @@ class _AdminSiteListPageState extends State<AdminSiteListPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   image: DecorationImage(
-                    image: AssetImage(
-                      destination.images.isNotEmpty
-                          ? destination.images.first
-                          : 'assets/images/placeholder.jpg',
-                    ),
+                    image: destination.images.isNotEmpty
+                        ? NetworkImage(destination.images.first)
+                        : AssetImage('assets/images/placeholder.jpg'),
                     fit: BoxFit.cover,
                   ),
                   color: Colors.grey[300],

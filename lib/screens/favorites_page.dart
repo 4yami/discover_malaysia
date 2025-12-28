@@ -111,11 +111,9 @@ class FavoritesPage extends StatelessWidget {
               height: 100,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(
-                    destination.images.isNotEmpty
-                        ? destination.images.first
-                        : 'assets/images/placeholder.jpg',
-                  ),
+                  image: destination.images.isNotEmpty
+                      ? NetworkImage(destination.images.first)
+                      : AssetImage('assets/images/placeholder.jpg'),
                   fit: BoxFit.cover,
                 ),
                 color: Colors.grey[300],

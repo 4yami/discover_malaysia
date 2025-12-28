@@ -38,33 +38,60 @@ class DestinationProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
 
   /// Get all destinations
-  List<Destination> get allDestinations => _repository.getAllDestinations();
+  List<Destination> get allDestinations {
+    final destinations = _repository.getAllDestinations();
+    // If Firebase cache is empty, fall back to dummy data for development
+    if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
+      return DestinationRepository().getAllDestinations();
+    }
+    return destinations;
+  }
 
   /// Get destinations by category
   List<Destination> getByCategory(DestinationCategory category) {
-    return _repository.getByCategory(category);
+    final destinations = _repository.getByCategory(category);
+    // If Firebase returns empty, fall back to dummy data
+    if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
+      return DestinationRepository().getByCategory(category);
+    }
+    return destinations;
   }
 
   /// Get featured destinations (top rated)
   List<Destination> getFeatured({int limit = 3}) {
-    return _repository.getFeatured(limit: limit);
+    final destinations = _repository.getFeatured(limit: limit);
+    // If Firebase returns empty, fall back to dummy data
+    if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
+      return DestinationRepository().getFeatured(limit: limit);
+    }
+    return destinations;
   }
 
   /// Get nearby destinations (sorted by distance)
   List<Destination> getNearby({int limit = 5}) {
-    return _repository.getNearby(limit: limit);
+    final destinations = _repository.getNearby(limit: limit);
+    // If Firebase returns empty, fall back to dummy data
+    if (destinations.isEmpty && _repository is FirebaseDestinationRepository) {
+      return DestinationRepository().getNearby(limit: limit);
+    }
+    return destinations;
   }
 
   /// Search destinations by name or description
   List<Destination> search(String query) {
     _searchQuery = query;
-    return _repository.search(query);
+    final destinations = _repository.search(query);
+    // If Firebase returns empty and query is not empty, fall back to dummy data
+    if (destinations.isEmpty && query.isNotEmpty && _repository is FirebaseDestinationRepository) {
+      return DestinationRepository().search(query);
+    }
+    return destinations;
   }
 
   /// Get current search results
   List<Destination> get searchResults {
     if (_searchQuery.isEmpty) return allDestinations;
-    return _repository.search(_searchQuery);
+    return search(_searchQuery);
   }
 
   /// Get a destination by ID

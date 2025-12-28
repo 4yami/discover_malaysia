@@ -110,9 +110,11 @@ class _HomePageState extends State<HomePage> {
               // Show filtered results if searching or category selected
               if (_searchQuery.isNotEmpty || _selectedCategory != null) ...[
                 Text(
-                  _selectedCategory != null 
-                      ? _getCategoryTitle(_selectedCategory!)
-                      : 'Search Results',
+                  _searchQuery.isNotEmpty
+                      ? 'Search Results'
+                      : _selectedCategory != null
+                          ? _getCategoryTitle(_selectedCategory!)
+                          : 'All Destinations',
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),

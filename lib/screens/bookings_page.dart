@@ -226,11 +226,9 @@ class _BookingsPageState extends State<BookingsPage>
                     top: Radius.circular(12),
                   ),
                   image: DecorationImage(
-                    image: AssetImage(
-                      booking.destinationImage.isNotEmpty
-                          ? booking.destinationImage
-                          : 'assets/images/placeholder.jpg',
-                    ),
+                    image: booking.destinationImage.isNotEmpty
+                        ? NetworkImage(booking.destinationImage)
+                        : AssetImage('assets/images/placeholder.jpg'),
                     fit: BoxFit.cover,
                   ),
                   color: Colors.grey[300],
@@ -353,4 +351,3 @@ class _BookingsPageState extends State<BookingsPage>
     );
   }
 }
-
