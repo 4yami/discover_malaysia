@@ -71,7 +71,6 @@ class Booking {
   final String id;
   final String destinationId;
   final String destinationName;
-  final String destinationImage;
   final String userId;
   final List<TicketSelection> tickets;
   final List<String> visitorNames;
@@ -88,7 +87,6 @@ class Booking {
     required this.id,
     required this.destinationId,
     required this.destinationName,
-    required this.destinationImage,
     required this.userId,
     required this.tickets,
     required this.visitorNames,

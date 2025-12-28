@@ -87,7 +87,7 @@ File: `lib/models/booking.dart`
 
 - `Booking`
   - Identification: `id`
-  - Relations: `destinationId`, `destinationName`, `destinationImage`, `userId`
+  - Relations: `destinationId`, `destinationName`, `userId`
   - Ticketing: `tickets` (`List<TicketSelection>`), `visitorNames`, `visitDate`
   - Pricing: `subtotal`, `taxAmount`, `totalPrice`
   - Status: `status`

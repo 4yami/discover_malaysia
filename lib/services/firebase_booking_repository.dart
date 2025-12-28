@@ -174,8 +174,6 @@ class FirebaseBookingRepository implements IBookingRepository {
     final data = {
       'destinationId': destination.id,
       'destinationName': destination.name,
-      'destinationImage':
-          destination.images.isNotEmpty ? destination.images.first : '',
       'userId': userId,
       'tickets': tickets
           .map((t) => {
@@ -199,8 +197,6 @@ class FirebaseBookingRepository implements IBookingRepository {
       id: docRef.id,
       destinationId: destination.id,
       destinationName: destination.name,
-      destinationImage:
-          destination.images.isNotEmpty ? destination.images.first : '',
       userId: userId,
       tickets: tickets,
       visitorNames: visitorNames,
@@ -230,7 +226,6 @@ class FirebaseBookingRepository implements IBookingRepository {
       id: doc.id,
       destinationId: data['destinationId'] ?? '',
       destinationName: data['destinationName'] ?? '',
-      destinationImage: data['destinationImage'] ?? '',
       userId: data['userId'] ?? '',
       tickets: (data['tickets'] as List<dynamic>? ?? [])
           .map((t) => TicketSelection(
