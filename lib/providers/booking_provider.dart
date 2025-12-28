@@ -54,19 +54,20 @@ class BookingProvider extends ChangeNotifier {
         firebaseRepo.streamBookingsForUser(userId).listen((bookings) {
       debugPrint(
           '[BookingProvider] streamBookingsForUser received: ${bookings.length} bookings');
-      
+
       _allBookings = bookings;
-      
+
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
       _upcomingBookings = bookings.where((b) {
-        return b.visitDate.isAfter(now) && b.status != BookingStatus.cancelled;
+        return b.visitDate.isAtSameMomentAs(today) || b.visitDate.isAfter(today) && b.status != BookingStatus.cancelled;
       }).toList()
         ..sort((a, b) => a.visitDate.compareTo(b.visitDate));
 
       _pastBookings = bookings.where((b) {
         // Past includes completed, cancelled, or dates in past
         return b.status == BookingStatus.cancelled ||
-               b.visitDate.isBefore(now);
+               b.visitDate.isBefore(today);
       }).toList()
         ..sort((a, b) => b.visitDate.compareTo(a.visitDate));
 

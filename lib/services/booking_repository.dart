@@ -38,10 +38,11 @@ class BookingRepository implements IBookingRepository {
   @override
   List<Booking> getUpcomingBookings(String userId) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     return _bookings
         .where((b) =>
             b.userId == userId &&
-            b.visitDate.isAfter(now) &&
+            (b.visitDate.isAtSameMomentAs(today) || b.visitDate.isAfter(today)) &&
             b.status != BookingStatus.cancelled)
         .toList()
       ..sort((a, b) => a.visitDate.compareTo(b.visitDate));
@@ -51,10 +52,11 @@ class BookingRepository implements IBookingRepository {
   @override
   List<Booking> getPastBookings(String userId) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     return _bookings
         .where((b) =>
             b.userId == userId &&
-            (b.status == BookingStatus.cancelled || b.visitDate.isBefore(now)))
+            (b.status == BookingStatus.cancelled || b.visitDate.isBefore(today)))
         .toList()
       ..sort((a, b) => b.visitDate.compareTo(a.visitDate));
   }
