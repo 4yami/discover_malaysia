@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/destination.dart';
 import '../providers/destination_provider.dart';
-import '../providers/transit_provider.dart';
 import 'site_details_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -63,33 +62,9 @@ class _HomePageState extends State<HomePage> {
     
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.map, size: 32),
-        ),
+        leading: const Icon(Icons.map, size: 32),
         title: const Text('Discover Malaysia'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.cloud_upload_outlined),
-            tooltip: 'Debug: Seed Data',
-            onPressed: () async {
-              try {
-                // Using TransitProvider to seed the new transits collection
-                await context.read<TransitProvider>().seed();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Transit Data Seeded! Check a booking confirmation to see changes.')),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              }
-            },
-          ),
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.notifications_outlined, size: 32),
@@ -264,18 +239,20 @@ class _HomePageState extends State<HomePage> {
           children: [
             Container(
               height: 200,
-              decoration: BoxDecoration(
+              decoration: destination.images.isNotEmpty ? BoxDecoration(
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
                 image: DecorationImage(
-                  image: AssetImage(
-                    destination.images.isNotEmpty 
-                        ? destination.images.first 
-                        : 'assets/images/placeholder.jpg',
-                  ),
+                  image: NetworkImage(destination.images.first),
                   fit: BoxFit.cover,
+                ),
+                color: Colors.grey[300],
+              ) : BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
                 ),
                 color: Colors.grey[300],
               ),
@@ -393,18 +370,20 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   width: 120,
                   height: 120,
-                  decoration: BoxDecoration(
+                  decoration: destination.images.isNotEmpty ? BoxDecoration(
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(12),
                       bottomLeft: Radius.circular(12),
                     ),
                     image: DecorationImage(
-                      image: AssetImage(
-                        destination.images.isNotEmpty 
-                            ? destination.images.first 
-                            : 'assets/images/placeholder.jpg',
-                      ),
+                      image: NetworkImage(destination.images.first),
                       fit: BoxFit.cover,
+                    ),
+                    color: Colors.grey[300],
+                  ) : BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
                     ),
                     color: Colors.grey[300],
                   ),

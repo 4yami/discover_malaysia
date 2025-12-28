@@ -35,7 +35,7 @@ class SiteDetailsPage extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(
+                    image: NetworkImage(
                       destination.images.isNotEmpty
                           ? destination.images.first
                           : 'assets/images/placeholder.jpg',

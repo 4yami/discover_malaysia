@@ -27,66 +27,9 @@ class SettingsPage extends StatelessWidget {
             value: settings.isDarkMode,
             onChanged: settings.setDarkMode,
           ),
-          ListTile(
-            leading: const Icon(Icons.language_outlined),
-            title: const Text('Language'),
-            subtitle: Text(settings.language),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showLanguageDialog(context, settings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.attach_money_outlined),
-            title: const Text('Currency'),
-            subtitle: Text(settings.currency),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showCurrencyDialog(context, settings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.straighten_outlined),
-            title: const Text('Distance Unit'),
-            subtitle: Text(settings.distanceUnit == 'km' ? 'Kilometers' : 'Miles'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showDistanceUnitDialog(context, settings),
-          ),
           const Divider(),
 
-          // ============ Notifications Section ============
-          _buildSectionHeader(context, 'Notifications'),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_outlined),
-            title: const Text('Push Notifications'),
-            subtitle: const Text('Receive push notifications'),
-            value: settings.notificationsEnabled,
-            onChanged: settings.setNotificationsEnabled,
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.email_outlined),
-            title: const Text('Email Notifications'),
-            subtitle: const Text('Receive booking confirmations via email'),
-            value: settings.emailNotifications,
-            onChanged: settings.notificationsEnabled
-                ? settings.setEmailNotifications
-                : null,
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.alarm_outlined),
-            title: const Text('Booking Reminders'),
-            subtitle: const Text('Get reminded before your visits'),
-            value: settings.bookingReminders,
-            onChanged: settings.notificationsEnabled
-                ? settings.setBookingReminders
-                : null,
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.local_offer_outlined),
-            title: const Text('Promotions & Deals'),
-            subtitle: const Text('Receive special offers and discounts'),
-            value: settings.promotionalNotifications,
-            onChanged: settings.notificationsEnabled
-                ? settings.setPromotionalNotifications
-                : null,
-          ),
-          const Divider(),
+
 
           // ============ Privacy Section ============
           _buildSectionHeader(context, 'Privacy'),
@@ -165,90 +108,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showLanguageDialog(BuildContext context, SettingsProvider settings) {
-    showDialog(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Select Language'),
-        children: SettingsProvider.supportedLanguages.map((lang) {
-          final isSelected = settings.language == lang;
-          return ListTile(
-            leading: Icon(
-              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-              color: isSelected ? Theme.of(context).colorScheme.primary : null,
-            ),
-            title: Text(lang),
-            onTap: () {
-              settings.setLanguage(lang);
-              Navigator.pop(ctx);
-            },
-          );
-        }).toList(),
-      ),
-    );
-  }
 
-  void _showCurrencyDialog(BuildContext context, SettingsProvider settings) {
-    showDialog(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Select Currency'),
-        children: SettingsProvider.supportedCurrencies.map((curr) {
-          final isSelected = settings.currency == curr;
-          return ListTile(
-            leading: Icon(
-              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-              color: isSelected ? Theme.of(context).colorScheme.primary : null,
-            ),
-            title: Text(curr),
-            onTap: () {
-              settings.setCurrency(curr);
-              Navigator.pop(ctx);
-            },
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void _showDistanceUnitDialog(
-      BuildContext context, SettingsProvider settings) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        final isKm = settings.distanceUnit == 'km';
-        final isMi = settings.distanceUnit == 'mi';
-        final primary = Theme.of(context).colorScheme.primary;
-        return SimpleDialog(
-          title: const Text('Select Distance Unit'),
-          children: [
-            ListTile(
-              leading: Icon(
-                isKm ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: isKm ? primary : null,
-              ),
-              title: const Text('Kilometers (km)'),
-              onTap: () {
-                settings.setDistanceUnit('km');
-                Navigator.pop(ctx);
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                isMi ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                color: isMi ? primary : null,
-              ),
-              title: const Text('Miles (mi)'),
-              onTap: () {
-                settings.setDistanceUnit('mi');
-                Navigator.pop(ctx);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   void _showComingSoon(BuildContext context) {
     UIHelpers.showSnackBar(
