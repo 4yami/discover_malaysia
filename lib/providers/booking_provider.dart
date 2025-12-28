@@ -65,9 +65,8 @@ class BookingProvider extends ChangeNotifier {
 
       _pastBookings = bookings.where((b) {
         // Past includes completed, cancelled, or dates in past
-        if (b.status == BookingStatus.cancelled) return false; // Usually past doesn't show cancelled? 
-        // Wait, original logic for past: visitDate < now
-        return b.visitDate.isBefore(now);
+        return b.status == BookingStatus.cancelled ||
+               b.visitDate.isBefore(now);
       }).toList()
         ..sort((a, b) => b.visitDate.compareTo(a.visitDate));
 

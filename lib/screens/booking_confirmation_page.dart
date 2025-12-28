@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/booking.dart';
 import '../config/app_config.dart';
+import '../providers/navigation_provider.dart';
 
 /// Page shown after a booking is successfully created
 class BookingConfirmationPage extends StatelessWidget {
@@ -205,8 +207,9 @@ class BookingConfirmationPage extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () {
-                    // Pop to home
+                    // Pop back to MainNavigation and go to home tab
                     Navigator.of(context).popUntil((route) => route.isFirst);
+                    context.read<NavigationProvider>().goToHome();
                   },
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -225,7 +228,9 @@ class BookingConfirmationPage extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
+                    // Pop back to MainNavigation and go to bookings tab
                     Navigator.of(context).popUntil((route) => route.isFirst);
+                    context.read<NavigationProvider>().goToBookings();
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

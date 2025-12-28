@@ -52,7 +52,9 @@ class BookingRepository implements IBookingRepository {
   List<Booking> getPastBookings(String userId) {
     final now = DateTime.now();
     return _bookings
-        .where((b) => b.userId == userId && b.visitDate.isBefore(now))
+        .where((b) =>
+            b.userId == userId &&
+            (b.status == BookingStatus.cancelled || b.visitDate.isBefore(now)))
         .toList()
       ..sort((a, b) => b.visitDate.compareTo(a.visitDate));
   }

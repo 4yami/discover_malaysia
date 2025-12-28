@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/booking_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/location_provider.dart';
+import '../providers/navigation_provider.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -15,11 +16,7 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-
-
 class _MainNavigationState extends State<MainNavigation> {
-  int _selectedIndex = 0;
-
   @override
   void initState() {
     super.initState();
@@ -75,17 +72,13 @@ class _MainNavigationState extends State<MainNavigation> {
     ProfilePage(),
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final navigationProvider = context.watch<NavigationProvider>();
+
     return Scaffold(
       body: IndexedStack(
-        index: _selectedIndex,
+        index: navigationProvider.selectedIndex,
         children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -104,9 +97,11 @@ class _MainNavigationState extends State<MainNavigation> {
             label: 'Profile',
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: navigationProvider.selectedIndex,
         selectedItemColor: Colors.blue,
-        onTap: _onItemTapped,
+        onTap: (index) {
+          navigationProvider.setSelectedIndex(index);
+        },
       ),
     );
   }
