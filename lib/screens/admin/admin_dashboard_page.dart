@@ -140,56 +140,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               children: [
                 Expanded(
                   child: _buildActionCard(
-                    icon: Icons.cloud_upload,
-                    title: 'Seed DB',
-                    onTap: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Seed Database?'),
-                          content: const Text(
-                              'This will overwrite basic data in Firestore with local dummy data. Continue?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Seed'),
-                            ),
-                          ],
+                    icon: Icons.add_location,
+                    title: 'Add Site',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminSiteListPage(),
                         ),
-                      );
-
-                      if (confirm == true && context.mounted) {
-                        try {
-                          await context
-                              .read<DestinationProvider>()
-                              .seedDatabase();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Database seeded successfully!'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error seeding: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      }
+                      ).then((_) => setState(() {}));
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
                 Expanded(
                   child: _buildActionCard(
                     icon: Icons.directions_subway,
@@ -201,25 +168,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           builder: (context) => const AdminTransitListPage(),
                         ),
                       );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionCard(
-                    icon: Icons.add_location,
-                    title: 'Add Site',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminSiteListPage(),
-                        ),
-                      ).then((_) => setState(() {}));
                     },
                   ),
                 ),

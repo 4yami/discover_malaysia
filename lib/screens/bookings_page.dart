@@ -16,11 +16,26 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String? _initializedUserId;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authProvider = context.watch<AuthProvider>();
+    final bookingProvider = context.watch<BookingProvider>();
+    final user = authProvider.user;
+
+    // Ensure bookingProvider streams are initialized for the logged-in user
+    if (user != null && _initializedUserId != user.id) {
+      _initializedUserId = user.id;
+      bookingProvider.initForUser(user.id);
+    }
   }
 
   @override
@@ -34,11 +49,6 @@ class _BookingsPageState extends State<BookingsPage>
     final authProvider = context.watch<AuthProvider>();
     final bookingProvider = context.watch<BookingProvider>();
     final user = authProvider.user;
-
-    // Ensure bookingProvider streams are initialized for the logged-in user
-    if (user != null) {
-      bookingProvider.initForUser(user.id);
-    }
 
     if (user == null) {
       return Scaffold(
