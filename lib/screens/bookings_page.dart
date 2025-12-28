@@ -4,6 +4,7 @@ import '../config/app_config.dart';
 import '../models/booking.dart';
 import '../providers/auth_provider.dart';
 import '../providers/booking_provider.dart';
+import '../providers/destination_provider.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -194,6 +195,9 @@ class _BookingsPageState extends State<BookingsPage>
   }
 
   Widget _buildBookingCard(Booking booking, {required bool isUpcoming}) {
+    final destinationProvider = context.read<DestinationProvider>();
+    final destination = destinationProvider.getById(booking.destinationId);
+
     Color statusColor;
     switch (booking.status) {
       case BookingStatus.confirmed:
@@ -226,8 +230,8 @@ class _BookingsPageState extends State<BookingsPage>
                     top: Radius.circular(12),
                   ),
                   image: DecorationImage(
-                    image: booking.destinationImage.isNotEmpty
-                        ? NetworkImage(booking.destinationImage)
+                    image: destination?.images.isNotEmpty == true
+                        ? NetworkImage(destination!.images.first)
                         : AssetImage('assets/images/placeholder.jpg'),
                     fit: BoxFit.cover,
                   ),

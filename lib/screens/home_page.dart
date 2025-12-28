@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
       provider.getFeatured(limit: 1);
 
   List<Destination> _getNearbyDestinations(DestinationProvider provider) =>
-      provider.getNearby(limit: 5);
+      provider.getNearby(limit: 15);
 
   @override
   void dispose() {

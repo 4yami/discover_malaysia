@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../config/app_config.dart';
 import '../../models/booking.dart';
+import '../../providers/destination_provider.dart';
 
 /// Reusable booking card widget for displaying bookings in lists
 class BookingCard extends StatelessWidget {
@@ -20,6 +22,8 @@ class BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final destinationProvider = context.watch<DestinationProvider>();
+    final destination = destinationProvider.getById(booking.destinationId);
     final isPast = booking.visitDate.isBefore(DateTime.now());
     final isCancelled = booking.status == BookingStatus.cancelled;
 
@@ -46,9 +50,9 @@ class BookingCard extends StatelessWidget {
                       width: 64,
                       height: 64,
                       color: theme.colorScheme.surfaceContainerHighest,
-                      child: booking.destinationImage.isNotEmpty
-                          ? Image.asset(
-                              booking.destinationImage,
+                      child: destination?.images.isNotEmpty == true
+                          ? Image.network(
+                              destination!.images.first,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
                                   _buildPlaceholder(theme),

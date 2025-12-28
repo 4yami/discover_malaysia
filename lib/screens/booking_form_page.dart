@@ -200,7 +200,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                 image: DecorationImage(
                   image: widget.destination.images.isNotEmpty
                       ? NetworkImage(widget.destination.images.first)
-                      : AssetImage('assets/images/placeholder.jpg'),
+                      : const AssetImage('assets/images/placeholder.jpg'),
                   fit: BoxFit.cover,
                 ),
                 color: Colors.grey[300],

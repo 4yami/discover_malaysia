@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/booking.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/destination_provider.dart';
 
 class AdminBookingsPage extends StatefulWidget {
   const AdminBookingsPage({super.key});
@@ -98,6 +99,9 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
   }
 
   Widget _buildBookingItem(Booking booking) {
+    final destinationProvider = context.read<DestinationProvider>();
+    final destination = destinationProvider.getById(booking.destinationId);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -132,8 +136,8 @@ class _AdminBookingsPageState extends State<AdminBookingsPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     image: DecorationImage(
-                      image: booking.destinationImage.isNotEmpty
-                          ? NetworkImage(booking.destinationImage)
+                      image: destination?.images.isNotEmpty == true
+                          ? NetworkImage(destination!.images.first)
                           : AssetImage('assets/images/placeholder.jpg'),
                       fit: BoxFit.cover,
                     ),
