@@ -50,7 +50,6 @@ class LocationService {
 
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
-      print('Error getting location: $e');
       return null;
     }
   }
@@ -64,7 +63,6 @@ class LocationService {
       }
       return null;
     } catch (e) {
-      print('Error getting last known location: $e');
       return null;
     }
   }
@@ -103,7 +101,6 @@ class LocationService {
 
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
-      print('Error getting location with settings: $e');
       return null;
     }
   }

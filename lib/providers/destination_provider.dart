@@ -153,7 +153,13 @@ class DestinationProvider extends ChangeNotifier {
 
   /// Get a destination by ID
   Destination? getById(String id) {
-    final destination = _repository.getById(id);
+    Destination? destination = _repository.getById(id);
+
+    // If Firebase cache is empty, fall back to dummy data for development
+    if (destination == null && _repository is FirebaseDestinationRepository) {
+      destination = DestinationRepository().getById(id);
+    }
+
     if (destination != null) {
       return _destinationWithDistance(destination, currentUserLocation);
     }

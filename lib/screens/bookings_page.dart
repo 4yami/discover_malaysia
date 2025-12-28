@@ -195,7 +195,7 @@ class _BookingsPageState extends State<BookingsPage>
   }
 
   Widget _buildBookingCard(Booking booking, {required bool isUpcoming}) {
-    final destinationProvider = context.read<DestinationProvider>();
+    final destinationProvider = context.watch<DestinationProvider>();
     final destination = destinationProvider.getById(booking.destinationId);
 
     Color statusColor;
