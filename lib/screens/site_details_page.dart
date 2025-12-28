@@ -7,6 +7,7 @@ import '../models/transit_station.dart';
 import '../providers/auth_provider.dart';
 import '../providers/destination_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/location_provider.dart';
 import '../providers/transit_provider.dart';
 import 'booking_form_page.dart';
 
@@ -232,19 +233,31 @@ class SiteDetailsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Nearby Transit
-                  if (context.watch<TransitProvider>().getNearby(destination.latitude, destination.longitude).isNotEmpty) ...[
-                    const Text(
-                      'Nearby Transit',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    ...context.watch<TransitProvider>().getNearby(destination.latitude, destination.longitude).map((station) {
-                       // Calculate strict display logic without redundant variables
-                       return _buildTransitItem(context, station, destination);
-                    }),
-                    const SizedBox(height: 16),
-                  ],
+                  // Nearby Transit - Show closest transit to user
+                  Builder(
+                    builder: (context) {
+                      final transitProvider = context.watch<TransitProvider>();
+                      final locationProvider = context.watch<LocationProvider>();
+                      final nearbyStations = transitProvider.nearbyStations;
+
+                      if (nearbyStations.isNotEmpty && locationProvider.hasLocation) {
+                        final closestStation = nearbyStations.first;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Nearby Transit',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTransitItem(context, closestStation, destination),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                   
                   // Opening hours
                   

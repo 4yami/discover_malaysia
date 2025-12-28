@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/destination.dart';
 import '../providers/destination_provider.dart';
 import '../providers/location_provider.dart';
+import '../providers/transit_provider.dart';
 import 'site_details_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -58,10 +59,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final locationProvider = context.watch<LocationProvider>();
     final destinationProvider = context.watch<DestinationProvider>();
+    final transitProvider = context.watch<TransitProvider>();
 
-    // Update destination provider with current location
+    // Update providers with current location
     WidgetsBinding.instance.addPostFrameCallback((_) {
       destinationProvider.setUserLocation(locationProvider.currentPosition);
+      transitProvider.setUserLocation(locationProvider.currentPosition);
     });
 
     final filteredDestinations = _getFilteredDestinations(destinationProvider);

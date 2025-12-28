@@ -7,9 +7,39 @@ class TransitProvider extends ChangeNotifier {
   final TransitRepository _repository = TransitRepository();
   List<TransitStation> _stations = [];
   bool _isLoading = false;
+  LatLng? _userLocation;
 
   List<TransitStation> get stations => _stations;
   bool get isLoading => _isLoading;
+
+  /// Set user location
+  void setUserLocation(LatLng? location) {
+    if (_userLocation != location) {
+      _userLocation = location;
+      notifyListeners(); // Notify to recalculate nearby stations
+    }
+  }
+
+  /// Get nearby stations (within reasonable distance)
+  List<TransitStation> get nearbyStations {
+    if (_userLocation == null || _stations.isEmpty) return [];
+
+    final distance = const Distance();
+    final center = _userLocation!;
+
+    // Calculate distances and filter stations within 10km
+    final nearby = _stations.where((s) {
+      final d = distance.as(LengthUnit.Kilometer, center, LatLng(s.latitude, s.longitude));
+      return d <= 10.0; // Only show stations within 10km
+    }).map((s) {
+      final d = distance.as(LengthUnit.Kilometer, center, LatLng(s.latitude, s.longitude));
+      return MapEntry(s, d);
+    }).toList();
+
+    // Sort by distance and take top 5
+    nearby.sort((a, b) => a.value.compareTo(b.value));
+    return nearby.take(5).map((e) => e.key).toList();
+  }
 
   Future<void> loadStations() async {
     _isLoading = true;
