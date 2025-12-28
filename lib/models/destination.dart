@@ -92,8 +92,6 @@ class Destination {
   final String address;
   final double latitude;
   final double longitude;
-  final String? googleMapsUrl;
-  final String? wazeUrl;
   final List<String> images;
   final List<DayHours> openingHours;
   final TicketPrice ticketPrice;
@@ -112,8 +110,6 @@ class Destination {
     required this.address,
     required this.latitude,
     required this.longitude,
-    this.googleMapsUrl,
-    this.wazeUrl,
     required this.images,
     required this.openingHours,
     required this.ticketPrice,
@@ -136,22 +132,6 @@ class Destination {
     return '${distanceKm!.toStringAsFixed(1)}km away';
   }
 
-  /// Generate Google Maps URL from coordinates if not provided
-  String get effectiveGoogleMapsUrl {
-    if (googleMapsUrl != null && googleMapsUrl!.isNotEmpty) {
-      return googleMapsUrl!;
-    }
-    return 'comgooglemaps://?q=$latitude,$longitude';
-  }
-
-  /// Generate Waze URL from coordinates if not provided
-  String get effectiveWazeUrl {
-    if (wazeUrl != null && wazeUrl!.isNotEmpty) {
-      return wazeUrl!;
-    }
-    return 'https://waze.com/ul?ll=$latitude,$longitude&navigate=yes';
-  }
-
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -162,8 +142,6 @@ class Destination {
       'address': address,
       'latitude': latitude,
       'longitude': longitude,
-      'googleMapsUrl': googleMapsUrl,
-      'wazeUrl': wazeUrl,
       'images': images,
       'openingHours': openingHours.map((h) => h.toMap()).toList(),
       'ticketPrice': ticketPrice.toMap(),
@@ -188,8 +166,6 @@ class Destination {
       address: map['address'] ?? '',
       latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
-      googleMapsUrl: map['googleMapsUrl'],
-      wazeUrl: map['wazeUrl'],
       images: List<String>.from(map['images'] ?? []),
       openingHours: (map['openingHours'] as List<dynamic>?)
               ?.map((e) => DayHours.fromMap(e as Map<String, dynamic>))

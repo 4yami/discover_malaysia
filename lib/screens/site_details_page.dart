@@ -194,7 +194,7 @@ class SiteDetailsPage extends StatelessWidget {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => _openMaps(context, destination.effectiveGoogleMapsUrl),
+                        onTap: () => _openMaps(context, 'https://www.google.com/maps?q=${destination.latitude},${destination.longitude}'),
                         child: const Row(
                           children: [
                             Icon(Icons.map, size: 18, color: Colors.blue),
@@ -212,7 +212,7 @@ class SiteDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 24),
                       GestureDetector(
-                        onTap: () => _openMaps(context, destination.effectiveWazeUrl),
+                        onTap: () => _openMaps(context, 'https://waze.com/ul?ll=${destination.latitude},${destination.longitude}&navigate=yes'),
                         child: const Row(
                           children: [
                             Icon(Icons.navigation, size: 18, color: Colors.blue),
@@ -537,7 +537,7 @@ Discover more amazing places in Malaysia!
                     label: 'Maps',
                     onTap: () {
                       Navigator.pop(context);
-                      _openMaps(context, destination.effectiveGoogleMapsUrl);
+                      _openMaps(context, 'https://www.google.com/maps?q=${destination.latitude},${destination.longitude}');
                     },
                   ),
                   _buildShareOption(

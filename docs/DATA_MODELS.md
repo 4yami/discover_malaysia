@@ -44,7 +44,6 @@ File: `lib/models/destination.dart`
   - Identification: `id`, `name`
   - Content: `shortDescription`, `detailedDescription`, `images`
   - Location: `address`, `latitude`, `longitude`
-  - Links: `googleMapsUrl`, `wazeUrl`
   - Business data: `category`, `openingHours`, `ticketPrice`
   - Ratings: `rating`, `reviewCount`
   - UX helpers: `distanceKm`, `lastUpdatedAt`, `updatedByAdminId`
@@ -53,8 +52,6 @@ Computed helpers:
 
 - `displayPrice` – e.g. `"RM 5.00"` or `"FREE"`
 - `displayDistance` – e.g. `"3.2km away"`
-- `effectiveGoogleMapsUrl` – falls back to a URL generated from coordinates
-- `effectiveWazeUrl` – falls back to a URL generated from coordinates
 
 ## 3. Reviews
 
